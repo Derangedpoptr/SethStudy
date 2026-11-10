@@ -69,11 +69,15 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
 .card.lock .ch{filter:blur(9px) brightness(.2) saturate(0)}
 .card.found{border-color:#f2c200}
 .card b{display:block;margin-top:8px}
-.card small{display:block;margin-top:4px;font-weight:700;font-size:12px;opacity:.9}
-#incoming{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;pointer-events:none;background:#e031314d;color:#fff;font-weight:900;font-size:clamp(28px,5vw,64px);letter-spacing:.04em;text-shadow:0 0 18px #000,0 0 10px #e03131}
-#incoming.on{display:flex;animation:alarm .24s steps(2,end) infinite}
-@keyframes alarm{from{background:#e031314d}to{background:#c92a2aaa}}
 #toast{position:fixed;left:50%;top:calc(var(--topH,110px) + 14px);transform:translateX(-50%);background:#ffd43b;color:#5c4400;font-weight:800;font-size:clamp(18px,2.4vw,28px);padding:12px 22px;border-radius:14px;z-index:9;display:none;box-shadow:0 6px 20px #0004}
+#info{display:none;position:fixed;inset:0;z-index:25;align-items:center;justify-content:center;background:#000a}
+#info>div{background:var(--panel);color:var(--ink);padding:24px 28px;border-radius:16px;width:100%;max-width:min(640px,94vw);max-height:90vh;overflow:auto;line-height:1.5}
+#info h2{margin:0 0 8px}#info h3{margin:20px 0 6px;font-size:18px}#info p,#info li{font-size:15px;margin:6px 0}#info ul{padding-left:22px;margin:6px 0}
+#info a,.legal a{color:#1c7ed6;font-weight:700}
+#info nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+#info nav a{padding:6px 12px;border:2px solid var(--line);border-radius:99px;text-decoration:none}
+#info .upd{font-size:13px;opacity:.75}
+.legal{margin:14px 0 0;font-size:14px}.legal a{margin:0 6px}
 @media (prefers-reduced-motion:reduce){.shiny .ch,.sp{animation:none}}
 </style>
 </head>
@@ -93,6 +97,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <div class="stat"><span id="streak">0:00</span><small>quiet streak</small></div>
   <button id="spawnBtn">Spawn Seth</button>
   <button id="idxBtn">Seth Index</button>
+  <button id="aboutBtn">About</button>
   <button id="gear" aria-expanded="false" aria-controls="panel">Settings</button>
   <button id="fs">Fullscreen</button>
 </div>
@@ -112,7 +117,38 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <h2>Seth Index</h2><div id="found"></div><div id="grid"></div>
   <button id="idxClose" class="primary">Close</button>
 </div></div>
-<div id="incoming">🚨 SETH INCOMING 🚨</div>
+<div id="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle"><div>
+  <h2 id="infoTitle">About, Privacy &amp; Contact</h2>
+  <nav aria-label="Sections"><a href="#about" class="infoLink">About</a><a href="#privacy" class="infoLink">Privacy Policy</a><a href="#contact" class="infoLink">Contact</a></nav>
+
+  <section id="sec-about">
+    <h3>About</h3>
+    <p>Classroom Noise Meter: Seth’s is a free, playful noise meter for the classroom. It listens to the room through your device’s microphone and shows how loud things are. Every 5 minutes of listening, a new Seth shows up and joins the scene. If the class gets too loud, they all run away.</p>
+    <p>The idea is simple: make staying calm and quiet a little more fun, and give students something to work toward together. You can set your own noise limit, adjust sensitivity and grace period, and collect every Seth in the Seth Index.</p>
+  </section>
+
+  <section id="sec-privacy">
+    <h3>Privacy Policy</h3>
+    <p class="upd">Last updated: November 10, 2026</p>
+    <ul>
+      <li><b>Microphone:</b> The site asks for microphone access only to measure loudness. Audio is analyzed live in your browser. It is never recorded, saved, or sent anywhere.</li>
+      <li><b>What is stored:</b> Your Seth Index progress (how many Seth’s you have found and your progress toward the next one) is saved in your browser’s local storage on your own device. Your settings are not sent to us. Use “Reset all progress” in Settings, or clear your browser’s site data, to delete it.</li>
+      <li><b>No tracking:</b> The site has no accounts, no advertising, no analytics, and no cookies, and it doesn’t share data with third parties.</li>
+      <li><b>Hosting:</b> Like any website, the host that serves these pages may keep standard server logs (such as IP address and browser type). We don’t have access to or use that information for anything else.</li>
+      <li><b>Email:</b> If you email us, we receive your email address and whatever you write, and we use it only to reply.</li>
+      <li><b>Children:</b> We don’t collect personal information from anyone, including children, through the site itself.</li>
+      <li><b>Changes:</b> If this policy changes, the updated version will appear here with a new date.</li>
+    </ul>
+    <p>Questions about privacy? Email <a href="mailto:Seth-george@outlook.com">Seth-george@outlook.com</a>.</p>
+  </section>
+
+  <section id="sec-contact">
+    <h3>Contact</h3>
+    <p>Questions, feedback, or ideas for new Seth’s? Email <a href="mailto:Seth-george@outlook.com">Seth-george@outlook.com</a>.</p>
+  </section>
+
+  <p style="margin-top:20px"><button id="infoClose" class="primary">Close</button></p>
+</div></div>
 <div id="toast"></div>
 
 <div id="start"><div>
@@ -120,6 +156,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <p>A new Seth shows up every 5 minutes of listening. If the class gets too loud, they all run away. Allow microphone access to begin.</p>
   <p id="err"></p>
   <button id="go" class="primary">Start listening</button>
+  <p class="legal"><a href="#about" class="infoLink">About</a>·<a href="#privacy" class="infoLink">Privacy</a>·<a href="#contact" class="infoLink">Contact</a></p>
 </div></div>
 
 <script>
@@ -129,11 +166,9 @@ const SPR=["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAD2CAYAAADoDAqPAA
 const UNLOCK_EVERY=300;     // seconds of listening per new Seth (300 = 5 minutes)
 const SHINY_MS=60000;       // how long a new Seth stays shiny
 const RETURN_AFTER=3;       // quiet seconds before Seth’s come back
-const INCOMING_MS=1200;     // warning duration before a Seth appears
 // Roster: name, face photo (0-3), animal. Unlocked in this order.
-const ROSTER=[{n:'Goat Seth',p:2,a:'goat',r:'common'},{n:'Chicken Seth',p:3,a:'chicken',r:'common'},{n:'Frog Seth',p:0,a:'frog',r:'common'},{n:'Pig Seth',p:1,a:'pig',r:'common'},
- {n:'Cow Seth',p:3,a:'cow',r:'uncommon'},{n:'Duck Seth',p:2,a:'duck',r:'uncommon'},{n:'Bunny Seth',p:1,a:'bunny',r:'rare'},{n:'Dino Seth',p:0,a:'dino',r:'legendary'}];
-const RARITY={common:{label:'Common',w:60},uncommon:{label:'Uncommon',w:28},rare:{label:'Rare',w:10},legendary:{label:'Legendary',w:2}};
+const ROSTER=[{n:'Goat Seth',p:2,a:'goat'},{n:'Chicken Seth',p:3,a:'chicken'},{n:'Frog Seth',p:0,a:'frog'},{n:'Pig Seth',p:1,a:'pig'},
+ {n:'Cow Seth',p:3,a:'cow'},{n:'Duck Seth',p:2,a:'duck'},{n:'Bunny Seth',p:1,a:'bunny'},{n:'Dino Seth',p:0,a:'dino'}];
 // ========================
 const $=id=>document.getElementById(id);
 const scene=$('scene'),fill=$('fill'),thr=$('thr'),meter=$('meter'),statusEl=$('status');
@@ -203,11 +238,11 @@ addEventListener('resize',layout);layout();
 // ---- Seth Index ----
 function renderIdx(){
   $('found').textContent=found+' of '+ROSTER.length+' found. Blurred Seth’s are still out there.';
-  $('grid').innerHTML=ROSTER.map((r,i)=>`<div class="card ${i<found?'found':'lock'}"><div class="box">${mk(r)}</div><b>${i<found?r.n:'???'}</b><small>${i<found?RARITY[r.r].label:'Unknown rarity'}</small></div>`).join('');
+  $('grid').innerHTML=ROSTER.map((r,i)=>`<div class="card ${i<found?'found':'lock'}"><div class="box">${mk(r)}</div><b>${i<found?r.n:'???'}</b></div>`).join('');
 }
 $('idxBtn').onclick=()=>{renderIdx();$('idx').style.display='flex'};
 $('idxClose').onclick=()=>$('idx').style.display='none';
-$('reset').onclick=()=>{if(confirm('Reset the Seth Index and start over?')){found=0;prog=0;save();for(const h of seths)h.el.remove();seths.length=0;onScreen.clear();shiny.clear();pendingSpawn=-1;$('incoming').classList.remove('on');renderIdx()}};
+$('reset').onclick=()=>{if(confirm('Reset the Seth Index and start over?')){found=0;prog=0;save();for(const h of seths)h.el.remove();seths.length=0;onScreen.clear();shiny.clear();renderIdx()}};
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',6000)}
 
 // ---- microphone ----
@@ -237,22 +272,6 @@ $('cal').onclick=()=>{if(!analyser)return;calibrating=true;calSamples=[];calEnd=
 
 // ---- Seth’s on screen ----
 const seths=[],onScreen=new Map(),shiny=new Map();
-const activeCount=()=>seths.reduce((n,h)=>n+(h.state!=='out'?1:0),0);
-const pickSpawnIndex=()=>{
-  if(!found)return-1;
-  const unlocked=ROSTER.slice(0,found);
-  let total=0;for(const r of unlocked)total+=(RARITY[r.r]?.w||1);
-  let roll=Math.random()*total;
-  for(let i=0;i<unlocked.length;i++){roll-=(RARITY[unlocked[i].r]?.w||1);if(roll<=0)return i}
-  return unlocked.length-1;
-};
-let incomingUntil=0,pendingSpawn=-1,pendingExtra=false;
-function queueIncomingSpawn(i,extra){
-  if(i<0||pendingSpawn>=0||seths.length>0||fleeing||calibrating)return false;
-  pendingSpawn=i;pendingExtra=!!extra;incomingUntil=performance.now()+INCOMING_MS;
-  $('incoming').classList.add('on');
-  return true;
-}
 function unlock(){
   if(found>=ROSTER.length)return;
   const r=ROSTER[found];shiny.set(found,performance.now()+SHINY_MS);found++;save();
@@ -294,10 +313,10 @@ function spawn(i,extra){
   seths.push(h);if(!extra)onScreen.set(i,h);
 }
 $('spawnBtn').onclick=()=>{
-  if(seths.length>0)return toast('Only one Seth can be out at a time.');
-  if(found<ROSTER.length)unlock();
-  if(!found)return;
-  queueIncomingSpawn(pickSpawnIndex(),true);
+  if(!found)return toast('No Seth’s found yet. Keep listening!');
+  if(fleeing)return toast('Too loud right now. Wait for quiet.');
+  if(seths.length>=14)return toast('The savanna is full!');
+  spawn(Math.floor(Math.random()*found),true);
 };
 function frame(t){
   const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;
@@ -323,12 +342,7 @@ function frame(t){
   }
   if(!paused){
     spawnT-=dt;
-    if(pendingSpawn>=0){
-      if(fleeing||calibrating){pendingSpawn=-1;pendingExtra=false;$('incoming').classList.remove('on')}
-      else if(t>=incomingUntil){spawn(pendingSpawn,pendingExtra);pendingSpawn=-1;pendingExtra=false;$('incoming').classList.remove('on');spawnT=.8}
-    }else if(!fleeing&&!calibrating&&seths.length===0&&spawnT<=0){
-      queueIncomingSpawn(pickSpawnIndex(),false);
-    }
+    if(!fleeing&&!calibrating&&spawnT<=0){for(let i=0;i<found;i++)if(!onScreen.has(i)){spawn(i,false);spawnT=.8;break}}
     for(let i=seths.length-1;i>=0;i--){
       const h=seths[i],out=h.state==='out';
       if(out){
@@ -354,12 +368,26 @@ function frame(t){
   }
   $('count').textContent=seths.filter(h=>h.state!=='out').length;
   $('empty').style.display=found?'none':'block';
-  const left=Math.ceil(UNLOCK_EVERY-prog);$('next').textContent=pendingSpawn>=0?'🚨':(found>=ROSTER.length?'All!':Math.floor(left/60)+':'+String(left%60).padStart(2,'0'));
-  if(pendingSpawn>=0)statusEl.textContent='🚨 SETH INCOMING 🚨';
+  const left=Math.ceil(UNLOCK_EVERY-prog);$('next').textContent=found>=ROSTER.length?'All!':Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
   const m=Math.floor(streakT/60),s=Math.floor(streakT%60);$('streak').textContent=m+':'+String(s).padStart(2,'0');
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// ===== About / Privacy / Contact =====
+(()=>{
+  const info=document.getElementById('info');let opener=null;
+  const open=(id,from)=>{opener=from||document.activeElement;info.style.display='flex';
+    const t=document.getElementById('sec-'+(id||'about'))||document.getElementById('sec-about');
+    t.scrollIntoView({block:'start'});document.getElementById('infoClose').focus({preventScroll:true})};
+  const close=()=>{info.style.display='none';if(opener&&opener.focus)opener.focus()};
+  document.getElementById('aboutBtn').onclick=e=>open('about',e.currentTarget);
+  document.getElementById('infoClose').onclick=close;
+  info.addEventListener('click',e=>{if(e.target===info)close()});
+  document.querySelectorAll('.infoLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.getAttribute('href').slice(1),a)}));
+  addEventListener('keydown',e=>{if(info.style.display==='flex'){if(e.key==='Escape')close();if(e.code==='Space'&&e.target.tagName!=='BUTTON')e.stopImmediatePropagation()}},true);
+  if(['#about','#privacy','#contact'].includes(location.hash))open(location.hash.slice(1),null);
+})();
 </script>
 </body>
 </html>
