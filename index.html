@@ -70,6 +70,14 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
 .card.found{border-color:#f2c200}
 .card b{display:block;margin-top:8px}
 #toast{position:fixed;left:50%;top:calc(var(--topH,110px) + 14px);transform:translateX(-50%);background:#ffd43b;color:#5c4400;font-weight:800;font-size:clamp(18px,2.4vw,28px);padding:12px 22px;border-radius:14px;z-index:9;display:none;box-shadow:0 6px 20px #0004}
+#info{display:none;position:fixed;inset:0;z-index:25;align-items:center;justify-content:center;background:#000a}
+#info>div{background:var(--panel);color:var(--ink);padding:24px 28px;border-radius:16px;width:100%;max-width:min(640px,94vw);max-height:90vh;overflow:auto;line-height:1.5}
+#info h2{margin:0 0 8px}#info h3{margin:20px 0 6px;font-size:18px}#info p,#info li{font-size:15px;margin:6px 0}#info ul{padding-left:22px;margin:6px 0}
+#info a,.legal a{color:#1c7ed6;font-weight:700}
+#info nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+#info nav a{padding:6px 12px;border:2px solid var(--line);border-radius:99px;text-decoration:none}
+#info .upd{font-size:13px;opacity:.75}
+.legal{margin:14px 0 0;font-size:14px}.legal a{margin:0 6px}
 @media (prefers-reduced-motion:reduce){.shiny .ch,.sp{animation:none}}
 </style>
 </head>
@@ -89,6 +97,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <div class="stat"><span id="streak">0:00</span><small>quiet streak</small></div>
   <button id="spawnBtn">Spawn Seth</button>
   <button id="idxBtn">Seth Index</button>
+  <button id="aboutBtn">About</button>
   <button id="gear" aria-expanded="false" aria-controls="panel">Settings</button>
   <button id="fs">Fullscreen</button>
 </div>
@@ -108,6 +117,38 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <h2>Seth Index</h2><div id="found"></div><div id="grid"></div>
   <button id="idxClose" class="primary">Close</button>
 </div></div>
+<div id="info" role="dialog" aria-modal="true" aria-labelledby="infoTitle"><div>
+  <h2 id="infoTitle">About, Privacy &amp; Contact</h2>
+  <nav aria-label="Sections"><a href="#about" class="infoLink">About</a><a href="#privacy" class="infoLink">Privacy Policy</a><a href="#contact" class="infoLink">Contact</a></nav>
+
+  <section id="sec-about">
+    <h3>About</h3>
+    <p>Classroom Noise Meter: Seth’s is a free, playful noise meter for the classroom. It listens to the room through your device’s microphone and shows how loud things are. Every 5 minutes of listening, a new Seth shows up and joins the scene. If the class gets too loud, they all run away.</p>
+    <p>The idea is simple: make staying calm and quiet a little more fun, and give students something to work toward together. You can set your own noise limit, adjust sensitivity and grace period, and collect every Seth in the Seth Index.</p>
+  </section>
+
+  <section id="sec-privacy">
+    <h3>Privacy Policy</h3>
+    <p class="upd">Last updated: November 10, 2026</p>
+    <ul>
+      <li><b>Microphone:</b> The site asks for microphone access only to measure loudness. Audio is analyzed live in your browser. It is never recorded, saved, or sent anywhere.</li>
+      <li><b>What is stored:</b> Your Seth Index progress (how many Seth’s you have found and your progress toward the next one) is saved in your browser’s local storage on your own device. Your settings are not sent to us. Use “Reset all progress” in Settings, or clear your browser’s site data, to delete it.</li>
+      <li><b>No tracking:</b> The site has no accounts, no advertising, no analytics, and no cookies, and it doesn’t share data with third parties.</li>
+      <li><b>Hosting:</b> Like any website, the host that serves these pages may keep standard server logs (such as IP address and browser type). We don’t have access to or use that information for anything else.</li>
+      <li><b>Email:</b> If you email us, we receive your email address and whatever you write, and we use it only to reply.</li>
+      <li><b>Children:</b> We don’t collect personal information from anyone, including children, through the site itself.</li>
+      <li><b>Changes:</b> If this policy changes, the updated version will appear here with a new date.</li>
+    </ul>
+    <p>Questions about privacy? Email <a href="mailto:Seth-george@outlook.com">Seth-george@outlook.com</a>.</p>
+  </section>
+
+  <section id="sec-contact">
+    <h3>Contact</h3>
+    <p>Questions, feedback, or ideas for new Seth’s? Email <a href="mailto:Seth-george@outlook.com">Seth-george@outlook.com</a>.</p>
+  </section>
+
+  <p style="margin-top:20px"><button id="infoClose" class="primary">Close</button></p>
+</div></div>
 <div id="toast"></div>
 
 <div id="start"><div>
@@ -115,6 +156,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
   <p>A new Seth shows up every 5 minutes of listening. If the class gets too loud, they all run away. Allow microphone access to begin.</p>
   <p id="err"></p>
   <button id="go" class="primary">Start listening</button>
+  <p class="legal"><a href="#about" class="infoLink">About</a>·<a href="#privacy" class="infoLink">Privacy</a>·<a href="#contact" class="infoLink">Contact</a></p>
 </div></div>
 
 <script>
@@ -331,6 +373,21 @@ function frame(t){
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// ===== About / Privacy / Contact =====
+(()=>{
+  const info=document.getElementById('info');let opener=null;
+  const open=(id,from)=>{opener=from||document.activeElement;info.style.display='flex';
+    const t=document.getElementById('sec-'+(id||'about'))||document.getElementById('sec-about');
+    t.scrollIntoView({block:'start'});document.getElementById('infoClose').focus({preventScroll:true})};
+  const close=()=>{info.style.display='none';if(opener&&opener.focus)opener.focus()};
+  document.getElementById('aboutBtn').onclick=e=>open('about',e.currentTarget);
+  document.getElementById('infoClose').onclick=close;
+  info.addEventListener('click',e=>{if(e.target===info)close()});
+  document.querySelectorAll('.infoLink').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();open(a.getAttribute('href').slice(1),a)}));
+  addEventListener('keydown',e=>{if(info.style.display==='flex'){if(e.key==='Escape')close();if(e.code==='Space'&&e.target.tagName!=='BUTTON')e.stopImmediatePropagation()}},true);
+  if(['#about','#privacy','#contact'].includes(location.hash))open(location.hash.slice(1),null);
+})();
 </script>
 </body>
 </html>
