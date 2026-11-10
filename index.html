@@ -271,10 +271,10 @@ function spawn(i,extra){
   seths.push(h);if(!extra)onScreen.set(i,h);
 }
 $('spawnBtn').onclick=()=>{
-  if(!found)return toast('No Seth’s found yet. Keep listening!');
-  if(fleeing)return toast('Too loud right now. Wait for quiet.');
   if(seths.length>=14)return toast('The savanna is full!');
-  spawn(Math.floor(Math.random()*found),true);
+  if(found<ROSTER.length)unlock();
+  if(!found)return;
+  spawn(found-1,true);
 };
 function frame(t){
   const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;
