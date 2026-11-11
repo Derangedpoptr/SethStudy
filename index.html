@@ -78,6 +78,19 @@ button:focus-visible,select:focus-visible,input:focus-visible,#meter:focus-visib
 #info nav a{padding:6px 12px;border:2px solid var(--line);border-radius:99px;text-decoration:none}
 #info .upd{font-size:13px;opacity:.75}
 .legal{margin:14px 0 0;font-size:14px}.legal a{margin:0 6px}
+#shopTab{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:4;writing-mode:vertical-rl;padding:16px 10px;border-radius:0 14px 14px 0;border-left:0;font-weight:800;letter-spacing:.06em;background:#ffd43b;color:#5c4400;border-color:#5c4400;box-shadow:3px 3px 0 #0003}
+#fx{position:fixed;left:12px;top:calc(var(--topH,110px) + 12px);z-index:4;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+#fx span{background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:99px;padding:4px 12px;font-weight:800;font-size:15px}
+#shop{display:none;position:fixed;inset:0;z-index:16;align-items:center;justify-content:center;background:#000a}
+#shop>div{background:var(--panel);color:var(--ink);padding:22px 26px;border-radius:16px;width:100%;max-width:min(980px,95vw);max-height:92vh;overflow:auto}
+#shop h2{margin:0 0 4px}#shop h3{margin:18px 0 8px;font-size:18px}
+#shopGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.item{border:3px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:5px;background:#ffd43b18}
+.item .ic{font-size:34px;line-height:1}.item p{margin:0;font-size:14px;line-height:1.35}.item small{opacity:.8;min-height:1.2em}
+.item button{margin-top:auto;font-weight:700}.item button:disabled{opacity:.45;cursor:not-allowed}
+body.shielded #scene{box-shadow:inset 0 0 0 6px #4dabf7,inset 0 0 70px 12px #4dabf780}
+.hat{position:absolute;left:50%;top:-1%;transform:translate(-50%,-35%);font-size:32px;line-height:1;z-index:2}
+body[data-hat="crown"] .hat::before{content:"👑"}body[data-hat="tophat"] .hat::before{content:"🎩"}body[data-hat="grad"] .hat::before{content:"🎓"}body[data-hat="cap"] .hat::before{content:"🧢"}
 html{background:#2b1b10}
 #prompt{position:fixed;left:50%;top:calc(var(--topH,110px) + 12px);transform:translateX(-50%);z-index:4;width:max-content;min-width:min(320px,90vw);max-width:min(920px,92vw);min-height:1.4em;padding:10px 22px;background:var(--panel);color:var(--ink);border:3px solid var(--line);border-radius:14px;font-size:clamp(20px,3vw,40px);font-weight:800;text-align:center;line-height:1.25;cursor:text;box-shadow:0 4px 14px #0003;overflow-wrap:anywhere}
 #prompt:empty::before{content:attr(data-ph);opacity:.55;font-weight:700}
@@ -122,6 +135,7 @@ body.shake{animation:shake .18s infinite}
     <div id="status">Waiting for microphone…</div>
   </div>
   <div class="stat"><span id="count">0</span><small>Seth’s here</small></div>
+  <div class="stat"><span id="coins">0</span><small>🪙 coins</small></div>
   <div class="stat"><span id="next">5:00</span><small>next Seth</small></div>
   <div class="stat"><span id="streak">0:00</span><small>quiet streak</small></div>
   <button id="spawnBtn">Spawn Seth</button>
@@ -180,6 +194,16 @@ body.shake{animation:shake .18s infinite}
   <p style="margin-top:20px"><button id="infoClose" class="primary">Close</button></p>
 </div></div>
 <div id="toast"></div>
+<button id="shopTab" aria-label="Open the shop">🛒 SHOP</button>
+<div id="fx" aria-live="polite"></div>
+<div id="shop" role="dialog" aria-modal="true" aria-labelledby="shopT"><div>
+  <h2 id="shopT">Seth Shop</h2>
+  <p>You have <b>🪙 <span id="shopCoins">0</span></b>. Every animal on screen earns coins while you keep the room quiet enough for them to stay. Rarer animals pay more.</p>
+  <h3>Powers</h3><div id="shopGrid"></div>
+  <h3>Upgrades</h3><div id="shopGrid2" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px"></div>
+  <h3>Hats (worn by every animal)</h3><div id="shopGrid3" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px"></div>
+  <p style="margin-top:18px"><button id="shopClose" class="primary">Close</button></p>
+</div></div>
 <div id="prompt" role="textbox" aria-label="Classroom prompt. Click to edit." contenteditable="true" spellcheck="false" data-ph="Click here to type today’s classroom prompt" title="Click to edit"></div>
 <div id="beacons" aria-hidden="true"><i class="beacon" style="left:6%;top:24%;--d:.7s"></i><i class="beacon" style="left:94%;top:24%;--d:.9s"></i><i class="beacon" style="left:4%;top:56%;--d:1.1s"></i><i class="beacon" style="left:96%;top:56%;--d:.8s"></i><i class="beacon" style="left:10%;top:90%;--d:1s"></i><i class="beacon" style="left:90%;top:90%;--d:.75s"></i><i class="beacon" style="left:50%;top:92%;--d:.6s"></i></div>
 <div id="approach" role="alert"><span>NEW SETH APPROACHING</span><small id="apSub"></small></div>
@@ -225,12 +249,13 @@ caracal:()=>`<path d="M186 160Q206 120 184 96" stroke="#c98f5a" stroke-width="12
 dog:()=>`<path d="M148 146Q190 128 178 84" stroke="#b9773a" stroke-width="13" fill="none" stroke-linecap="round"/>${ear(34,98,16,38,14,'#7a4a22')}${ear(166,98,16,38,-14,'#7a4a22')}${legs('#c68642','#f4ece0',16,28)}${body('#d29552')}<ellipse cx="100" cy="168" rx="30" ry="22" fill="#f6e6cf"/><ellipse cx="136" cy="146" rx="15" ry="11" fill="#8a5527"/><path d="M60 200h24M116 200h24" stroke="#f4ece0" stroke-width="7" stroke-linecap="round"/>`,
 cat:()=>`<path d="M150 154Q204 156 192 104Q188 86 172 94" stroke="#9aa1aa" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M196 124l-9 4M198 110l-10 3" stroke="#5e656e" stroke-width="4" stroke-linecap="round"/><path d="M40 64L44 8L86 36Z" fill="#9aa1aa"/><path d="M160 64L156 8L114 36Z" fill="#9aa1aa"/><path d="M48 54L50 22L74 38Z" fill="#f2a7b7"/><path d="M152 54L150 22L126 38Z" fill="#f2a7b7"/>${legs('#a7adb5','#ffffff',14,26)}${body('#b3b9c1')}<ellipse cx="100" cy="168" rx="28" ry="22" fill="#f1f3f5"/><path d="M62 132Q74 140 70 156M84 126Q94 136 90 150M138 132Q126 140 130 156M116 126Q106 136 110 150" stroke="#6e757e" stroke-width="5" fill="none" stroke-linecap="round"/>`
 };
-const mk=r=>`<div class="ch"><svg viewBox="0 0 200 250" aria-hidden="true">${ANI[r.a]()}</svg><img class="hd" alt="" src="${SPR[r.p]}"><i class="sp">✦</i><i class="sp">✦</i><i class="sp">✦</i></div>`;
+const mk=r=>`<div class="ch"><svg viewBox="0 0 200 250" aria-hidden="true">${ANI[r.a]()}</svg><img class="hd" alt="" src="${SPR[r.p]}"><span class="hat"></span><i class="sp">✦</i><i class="sp">✦</i><i class="sp">✦</i></div>`;
 
 // ---- progress (saved in this browser only) ----
-let found=0,prog=0,saveT=0;
-try{const s=JSON.parse(localStorage.getItem('sethState')||'{}');found=Math.min(ROSTER.length,s.found|0);prog=+s.prog||0}catch(e){}
-const save=()=>{try{localStorage.setItem('sethState',JSON.stringify({found,prog}))}catch(e){}};
+const S={coins:0,guard:0,feed:0,fuse:0,hats:[],hat:'',shieldT:0,goldenT:0};
+let found=1,prog=0,saveT=0,fresh=true;   // start with one Seth, then one more every UNLOCK_EVERY seconds
+try{const raw=localStorage.getItem('sethState');if(raw){const s=JSON.parse(raw);found=Math.max(1,Math.min(ROSTER.length,s.found|0));prog=+s.prog||0;fresh=false;Object.assign(S,{coins:+s.coins||0,guard:s.guard|0,feed:Math.min(3,s.feed|0),fuse:Math.min(3,s.fuse|0),hats:Array.isArray(s.hats)?s.hats:[],hat:s.hat||''})}}catch(e){}
+const save=()=>{try{localStorage.setItem('sethState',JSON.stringify({found,prog,coins:Math.floor(S.coins),guard:S.guard,feed:S.feed,fuse:S.fuse,hats:S.hats,hat:S.hat}))}catch(e){}};
 
 // ---- settings UI ----
 const ui={thrS:$('thrS'),sens:$('sens'),grace:$('grace')};
@@ -280,7 +305,7 @@ function renderIdx(){
 }
 $('idxBtn').onclick=()=>{renderIdx();$('idx').style.display='flex'};
 $('idxClose').onclick=()=>$('idx').style.display='none';
-$('reset').onclick=()=>{if(confirm('Reset the Seth Index and start over?')){found=0;prog=0;save();for(const h of seths){h.el.remove();h.pc?.el.remove();h.rope?.remove()}seths.length=0;onScreen.clear();shiny.clear();renderIdx()}};
+$('reset').onclick=()=>{if(confirm('Reset the Seth Index and start over?')){found=1;prog=0;Object.assign(S,{coins:0,guard:0,feed:0,fuse:0,hats:[],hat:'',shieldT:0,goldenT:0});applyHat();save();for(const h of seths){h.el.remove();h.pc?.el.remove();h.rope?.remove()}seths.length=0;onScreen.clear();shiny.clear();shiny.set(0,performance.now()+SHINY_MS);renderIdx()}};
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',6000)}
 
 // ---- microphone ----
@@ -304,6 +329,7 @@ $('go').onclick=async()=>{
   try{
     if(!navigator.mediaDevices?.getUserMedia)throw new Error('Microphone access needs a secure (https) page.');
     await openMic();await listMics();$('start').remove();statusEl.textContent='Listening…';
+    if(fresh){shiny.set(0,performance.now()+SHINY_MS);fresh=false}
   }catch(e){$('err').textContent=(e.name==='NotAllowedError'?'Microphone blocked. Allow it in your browser’s site settings and try again.':e.message||'No microphone found.')}
 };
 $('cal').onclick=()=>{if(!analyser)return;calibrating=true;calSamples=[];calEnd=performance.now()+5000};
@@ -433,6 +459,63 @@ function approach(list){
   muteUntil=Math.max(muteUntil,performance.now()+WARN_MS+1100);   // keep the sirens from counting as classroom noise
   sirens(WARN_MS/1000);
 }
+// ---- shop: coins come from keeping animals on screen ----
+const RATE=[.2,.3,.5,1,2];   // coins per second per animal: Common, Uncommon, Rare, Epic, Legendary
+function earn(dt){
+  S.shieldT=Math.max(0,S.shieldT-dt);S.goldenT=Math.max(0,S.goldenT-dt);
+  let r=0;for(const h of seths)if(!h.extra&&h.state!=='poach')r+=RATE[RAR[ROSTER[h.i].a]-1];   // Spawn Seth extras don’t pay
+  S.coins+=r*(1+.25*S.feed)*(S.goldenT>0?2:1)*dt;
+}
+const pickRare=()=>{const p=ROSTER.map((r,i)=>i).filter(i=>RAR[ROSTER[i].a]>=3);return p[Math.floor(Math.random()*p.length)]};
+const ITEMS=[
+ {id:'shield',g:1,ic:'🛡️',n:'Poacher Shield',d:'Noise can’t call the poachers for 60 seconds.',cost:150,buy(){S.shieldT+=60}},
+ {id:'guard',g:1,ic:'🐕',n:'Guard Dog',d:'Scares off the next poacher raid. Stacks if you buy more.',cost:120,own:()=>S.guard,buy(){S.guard++}},
+ {id:'golden',g:1,ic:'✨',n:'Golden Hour',d:'2 minutes: every animal turns shiny and coins are doubled.',cost:120,buy(){S.goldenT+=120}},
+ {id:'warp',g:1,ic:'⏩',n:'Time Warp',d:'Jump 2 minutes closer to the next Seth.',cost:160,avail:()=>found<ROSTER.length,buy(){prog+=120;if(prog>=UNLOCK_EVERY){prog-=UNLOCK_EVERY;unlock()}}},
+ {id:'find',g:1,ic:'🔮',n:'Instant Find',d:'Find the next Seth for the Index right now.',cost:500,avail:()=>found<ROSTER.length,buy(){unlock()}},
+ {id:'lure',g:1,ic:'🎲',n:'Rare Lure',d:'Summons an extra Rare, Epic or Legendary Seth for a visit.',cost:200,buy(){approach([{i:pickRare(),extra:true}])}},
+ {id:'feed',g:2,ic:'🌾',n:'Golden Feed',d:'+25% coins from every animal.',lv:3,costs:[150,350,700]},
+ {id:'fuse',g:2,ic:'⏱️',n:'Longer Fuse',d:'+1 second of loudness allowed before poachers are called.',lv:3,costs:[200,400,800]},
+ {id:'crown',g:3,hat:1,ic:'👑',n:'Crown',d:'Fit for a Seth.',cost:100},{id:'tophat',g:3,hat:1,ic:'🎩',n:'Top Hat',d:'Very distinguished.',cost:75},
+ {id:'grad',g:3,hat:1,ic:'🎓',n:'Grad Cap',d:'For the study-minded.',cost:75},{id:'cap',g:3,hat:1,ic:'🧢',n:'Ball Cap',d:'Casual Friday.',cost:50}
+];
+function cardFor(it){
+  let cost=0,btn='Buy',sub='',lock=false;
+  if(it.hat){const own=S.hats.includes(it.id);cost=own?0:it.cost;btn=own?(S.hat===it.id?'Take off':'Wear'):'Buy';sub=own?'Owned':''}
+  else if(it.lv){const lv=S[it.id];sub='Level '+lv+' of '+it.lv;if(lv<it.lv){cost=it.costs[lv];btn='Upgrade'}else{btn='MAX';lock=true}}
+  else{cost=it.cost;if(it.own)sub='You have: '+it.own();if(S.shieldT>0&&it.id==='shield')sub='Active';if(it.avail&&!it.avail()){lock=true;sub='All found!'}}
+  return `<div class="item"><span class="ic">${it.ic}</span><b>${it.n}</b><p>${it.d}</p><small>${sub}</small><button data-id="${it.id}" data-need="${cost}" ${lock?'data-lock="1" disabled':''}>${btn}${cost?' · 🪙 '+cost:''}</button></div>`;
+}
+function renderShop(){
+  for(const g of [1,2,3])$(g===1?'shopGrid':'shopGrid'+g).innerHTML=ITEMS.filter(i=>i.g===g).map(cardFor).join('');
+  refreshShop();
+}
+function refreshShop(){
+  $('shopCoins').textContent=Math.floor(S.coins);
+  $('shop').querySelectorAll('button[data-id]').forEach(b=>b.disabled=!!b.dataset.lock||S.coins<+b.dataset.need);
+}
+function applyHat(){document.body.dataset.hat=S.hat||''}
+function buyItem(id){
+  const it=ITEMS.find(x=>x.id===id);if(!it)return;
+  if(it.hat){if(S.hats.includes(id)){S.hat=S.hat===id?'':id}else if(S.coins>=it.cost){S.coins-=it.cost;S.hats.push(id);S.hat=id}applyHat()}
+  else if(it.lv){const c=it.costs[S[id]];if(c!=null&&S.coins>=c){S.coins-=c;S[id]++}}
+  else if(S.coins>=it.cost&&(!it.avail||it.avail())){S.coins-=it.cost;it.buy();toast(it.ic+' '+it.n+' activated!')}
+  save();renderShop();
+}
+$('shop').addEventListener('click',e=>{const b=e.target.closest('button[data-id]');if(b&&!b.disabled)buyItem(b.dataset.id);if(e.target===$('shop'))$('shop').style.display='none'});
+$('shopTab').onclick=()=>{renderShop();$('shop').style.display='flex'};
+$('shopClose').onclick=()=>$('shop').style.display='none';
+addEventListener('keydown',e=>{if(e.key==='Escape')$('shop').style.display='none'});
+let fxLast='',lastC=-1;
+function hud(){
+  const c=Math.floor(S.coins);$('coins').textContent=c;
+  document.body.classList.toggle('shielded',S.shieldT>0);
+  const f=m=>{const s=Math.ceil(m);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')},fx=[];
+  if(S.shieldT>0)fx.push('🛡️ Shield '+f(S.shieldT));if(S.goldenT>0)fx.push('✨ Golden Hour '+f(S.goldenT));if(S.guard)fx.push('🐕 Guard Dog ×'+S.guard);
+  const k=fx.join('|');if(k!==fxLast){fxLast=k;$('fx').innerHTML=fx.map(x=>'<span>'+x+'</span>').join('')}
+  if(c!==lastC){lastC=c;if($('shop').style.display==='flex')refreshShop()}
+}
+applyHat();
 function frame(t){
   const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;
   if(analyser&&!paused){
@@ -450,7 +533,11 @@ function frame(t){
       if(t>=calEnd){calibrating=false;const avg=calSamples.reduce((a,b)=>a+b,0)/calSamples.length;SETTINGS.threshold=Math.min(95,Math.max(15,avg+15));syncUI();statusEl.textContent='Calibrated. Limit set to '+Math.round(SETTINGS.threshold)}
     }else{
       if(over){loudT+=dt;quietT=0;streakT=0}else{quietT+=dt;loudT=0;streakT+=dt}
-      if(!fleeing&&loudT>=SETTINGS.grace){fleeing=true;shakeUntil=t+3000}
+      if(!fleeing&&loudT>=SETTINGS.grace+S.fuse){
+        if(S.shieldT>0)loudT=0;                                                   // Poacher Shield: raids blocked
+        else if(S.guard>0){S.guard--;save();loudT=-3;toast('🐕 Your Guard Dog scared off the poachers!')}
+        else{fleeing=true;shakeUntil=t+3000}
+      }
       if(fleeing&&quietT>=RETURN_AFTER)fleeing=false;
       statusEl.textContent=fleeing?'Poachers alerted!':over?'Getting loud…':'Nice and quiet';
     }
@@ -458,6 +545,7 @@ function frame(t){
   if(!paused){
     spawnT-=dt;
     anyPoach=seths.some(h=>h.state==='poach');
+    if(analyser)earn(dt);
     if(warnT>0){warnT-=dt;if(warnT<=0){warnT=0;rel.push(...pending.splice(0));relT=0}}
     if(rel.length){relT-=dt;if(relT<=0){const q=rel.shift();spawn(q.i,q.extra);relT=1.5}}
     if(analyser&&!fleeing&&!calibrating&&!anyPoach&&warnT<=0&&!rel.length){
@@ -481,12 +569,12 @@ function frame(t){
       if(h.state==='poach')poachPose(h,t);
       h.el.style.opacity=Math.min(1,(t-h.born)/500);
       h.el.classList.toggle('run',h.state==='poach');
-      h.el.classList.toggle('shiny',(shiny.get(h.i)||0)>t);
+      h.el.classList.toggle('shiny',(shiny.get(h.i)||0)>t||S.goldenT>0);
       h.el.style.zIndex=Math.round(h.v*1000)+1;
       if(h.gone){h.pc.el.remove();h.rope?.remove();h.el.remove();seths.splice(i,1);if(!h.extra)onScreen.delete(h.i)}
     }
   }
-  document.body.classList.toggle('alarm',fleeing||anyPoach);document.body.classList.toggle('warn',warnT>0);document.body.classList.toggle('shake',warnT>0||t<shakeUntil);
+  document.body.classList.toggle('alarm',fleeing||anyPoach);document.body.classList.toggle('warn',warnT>0);document.body.classList.toggle('shake',warnT>0||t<shakeUntil);hud();
   $('count').textContent=seths.filter(h=>h.state!=='out').length;
   $('empty').style.display=(found||seths.length)?'none':'block';
   const left=Math.ceil(UNLOCK_EVERY-prog);$('next').textContent=found>=ROSTER.length?'All!':Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
