@@ -138,6 +138,7 @@ body.shake{animation:shake .18s infinite}
   <div class="stat"><span id="coins">0</span><small>🪙 coins</small></div>
   <div class="stat"><span id="next">5:00</span><small>next Seth</small></div>
   <div class="stat"><span id="streak">0:00</span><small>quiet streak</small></div>
+  <button id="muteBtn" aria-pressed="false">🔊 Sound on</button>
   <button id="spawnBtn">Spawn Seth</button>
   <button id="idxBtn">Seth Index</button>
   <button id="aboutBtn">About</button>
@@ -154,7 +155,7 @@ body.shake{animation:shake .18s infinite}
   <label for="vol">Sound volume (boom and sirens) <output id="volO"></output></label><input id="vol" type="range" min="0" max="100" value="70">
   <button id="reset" style="margin-top:14px;width:100%">Reset all progress</button>
   <p>Audio is analyzed live in your browser. Nothing is recorded, saved, or sent anywhere.</p>
-  <p>Keys: Space pauses. N finds the next Seth right away (for testing).</p>
+  <p>Keys: Space pauses. N finds the next Seth right away (for testing). M mutes or unmutes sounds.</p>
 </div>
 
 <div id="idx"><div>
@@ -345,6 +346,7 @@ addEventListener('keydown',e=>{
   if(/INPUT|SELECT/.test(e.target.tagName)||e.target.isContentEditable)return;
   if(e.code==='Space'&&e.target.tagName!=='BUTTON'){e.preventDefault();paused=!paused;if(paused)statusEl.textContent='Paused'}
   if(e.key==='n'||e.key==='N')unlock();
+  if(e.key==='m'||e.key==='M')toggleMute();
 });
 // Each Seth gets its own closed loop on the ground plane (an ellipse with an optional wobble),
 // re-randomized on every spawn, avoiding the lake and never matching another Seth’s loop.
@@ -384,8 +386,8 @@ const SND=new Audio(BOOM);SND.preload='auto';
 let VOL=.7,muteUntil=0;
 $('volO').textContent='70%';$('vol').oninput=e=>{VOL=e.target.value/100;$('volO').textContent=e.target.value+'%'};
 function boom(){
-  if(VOL<=0)return;
-  const a=SND.cloneNode();a.volume=VOL;a.play().catch(()=>{});
+  if(VOL<=0||MUTED)return;
+  const a=SND.cloneNode();a.volume=VOL;booms.add(a);a.onended=()=>booms.delete(a);a.play().catch(()=>{});
   muteUntil=Math.max(muteUntil,performance.now()+1100);   // don’t let the speaker boom count as classroom noise
 }
 // ---- classroom prompt (editable, saved in this browser) ----
@@ -439,10 +441,10 @@ function pickWeighted(){   // Spawn Seth button: rarer animals show up less ofte
 const WARN_MS=3500;   // how long the warning lasts before the Seth appears
 let anyPoach=false,warnT=0,pending=[],rel=[],relT=0,shakeUntil=0;
 function sirens(sec){
-  if(!ctx||VOL<=0)return;
+  if(!ctx||VOL<=0||MUTED)return;
   if(ctx.state==='suspended')ctx.resume();
   const now=ctx.currentTime,m=ctx.createGain();
-  m.gain.setValueAtTime(0,now);m.gain.linearRampToValueAtTime(.45*VOL,now+.15);m.gain.setValueAtTime(.45*VOL,now+sec-.4);m.gain.linearRampToValueAtTime(0,now+sec);m.connect(ctx.destination);
+  m.gain.setValueAtTime(0,now);m.gain.linearRampToValueAtTime(.45*VOL,now+.15);m.gain.setValueAtTime(.45*VOL,now+sec-.4);m.gain.linearRampToValueAtTime(0,now+sec);m.connect(ctx.destination);sirenGain=m;
   [[700,1300,.9,'sawtooth'],[500,1000,1.3,'square'],[900,1500,.7,'sawtooth'],[400,800,1.7,'triangle'],[1000,1700,1.1,'square']].forEach(([lo,hi,rate,type])=>{
     const o=ctx.createOscillator(),g=ctx.createGain(),l=ctx.createOscillator(),lg=ctx.createGain();
     o.type=type;o.frequency.value=(lo+hi)/2;l.frequency.value=rate;lg.gain.value=(hi-lo)/2;l.connect(lg);lg.connect(o.frequency);
@@ -456,7 +458,7 @@ function approach(list){
   const one=pending.length===1?rar(ROSTER[pending[0].i]):null;
   $('apSub').textContent=one?'★ '+one.n+' ★':pending.length+' Seth’s incoming';
   $('apSub').style.color=one?one.c:'#fff';
-  muteUntil=Math.max(muteUntil,performance.now()+WARN_MS+1100);   // keep the sirens from counting as classroom noise
+  if(!MUTED&&VOL>0)muteUntil=Math.max(muteUntil,performance.now()+WARN_MS+1100);   // keep the sirens from counting as classroom noise
   sirens(WARN_MS/1000);
 }
 // ---- shop: coins come from keeping animals on screen ----
@@ -516,6 +518,16 @@ function hud(){
   if(c!==lastC){lastC=c;if($('shop').style.display==='flex')refreshShop()}
 }
 applyHat();
+// ---- mute button (remembered in this browser) ----
+let MUTED=false,sirenGain=null;const booms=new Set();
+try{MUTED=localStorage.getItem('sethMuted')==='1'}catch(e){}
+function toggleMute(){
+  MUTED=!MUTED;try{localStorage.setItem('sethMuted',MUTED?'1':'0')}catch(e){}
+  if(MUTED){booms.forEach(a=>a.pause());booms.clear();if(sirenGain&&ctx){sirenGain.gain.cancelScheduledValues(ctx.currentTime);sirenGain.gain.setValueAtTime(0,ctx.currentTime)}muteUntil=0}
+  showMute();
+}
+function showMute(){const b=$('muteBtn');b.textContent=MUTED?'🔇 Muted':'🔊 Sound on';b.setAttribute('aria-pressed',MUTED)}
+$('muteBtn').onclick=toggleMute;showMute();
 const need=()=>found?UNLOCK_EVERY:FIRST_AFTER;
 function frame(t){
   const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;
